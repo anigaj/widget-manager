@@ -1,0 +1,11 @@
+{
+    "name": "jolla clock simple",
+    "description": "Default jolla clock with no animations",
+    "path":"/usr/share/widgetManager/widgets/jolla-lock-clock-simple",
+    "main": "JollaLockClockSimple",
+    "height": "0.3",
+    "width": "0.6",
+	"infos": {
+        "maintainer": "Anant Gajjar"
+	}
+}

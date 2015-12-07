@@ -1,0 +1,8 @@
+{
+    "name": "Widget Manager for lockscreen",
+    "description": "Patch to enable widget manager for the lockscreen",
+    "category": "homescreen",
+	"infos": {
+        "maintainer": "Anant Gajjar"
+	}
+}

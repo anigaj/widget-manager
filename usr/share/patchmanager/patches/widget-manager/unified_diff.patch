@@ -1,0 +1,180 @@
+diff -rupN original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml
+--- original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml	2015-11-21 15:24:32.000000000 +0000
++++ patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml	2015-11-21 16:02:00.000000000 +0000
+@@ -12,12 +12,13 @@ import com.jolla.lipstick 0.1
+ import org.nemomobile.lipstick 0.1
+ import org.nemomobile.configuration 1.0
+ import "../main"
++import "file:///home/nemo/widgetManager"
+ 
+ SilicaFlickable {
+     id: lockItem
+     readonly property alias indicatorSize: rightIndicator.width
+     property bool allowAnimations
+-    property alias clock: clock
++//    property alias clock: clock
+     property alias mpris: mpris
+     property alias leftIndicator: leftIndicator
+     property alias rightIndicator: rightIndicator
+@@ -110,109 +111,19 @@ SilicaFlickable {
+                 mpris.item.anchors.horizontalCenter = Qt.binding(function () { return parent.horizontalCenter })
+                 mpris.item.anchors.bottom = Qt.binding(function () { return parent.bottom })
+                 mpris.item.anchors.bottomMargin = 2 * Theme.paddingLarge
+-                mpris.item.opacity = Qt.binding(function() { return mpris.item && mpris.item.enabled ? clock.opacity : 0.0 })
++                mpris.item.opacity = Qt.binding(function() { return mpris.item && mpris.item.enabled ? 1.0 : 0.0 })
+                 mpris.item.buttonSize = Screen.sizeCategory > Screen.Medium ? Theme.iconSizeExtraLarge : Theme.iconSizeLarge
+             }
+         }
+-
+-        Clock {
+-            id: clock
+-
+-            property bool cannotCenter: Screen.sizeCategory <= Screen.Medium && lockScreenPage.isPortrait
+-
+-            property real peekOffset: clock.followPeekPosition
+-                        ? lockScreen.progress * lockScreen.peekFilter.threshold * 0.25
+-                        : 0
+-            property real animationOffset
+-            readonly property real offset: Math.max(peekOffset, animationOffset)
+-
+-            property string positionState: {
+-                if (lockScreen.lowPowerMode) {
+-                    return "fixed-center"
+-                } else if (!lockScreen.locked && !visible) {
+-                    return "fixed-raised"
+-                } else if (!lockItem.allowAnimations) {
+-                    return lockScreen.lockScreenAnimated ? "raised" : "fixed-center"
+-                } else if (lockScreen.panning) {
+-                    return "panning"
+-                } else if (!lockScreen.locked
+-                            || Lipstick.compositor.notificationOverviewLayer.revealingEventsView) {
+-                    return "raised"
+-                } else {
+-                    return "center"
+-                }
+-            }
+-
+-            onPositionStateChanged: {
+-                if (positionState == "fixed-raised") {
+-                    offsetAnimation.stop()
+-                    animationOffset = lockScreen.peekFilter.threshold * 0.5
+-                    opacityAnimation.stop()
+-                    opacity = 0
+-                } else if (positionState == "fixed-center") {
+-                    offsetAnimation.stop()
+-                    animationOffset = 0
+-                    opacityAnimation.stop()
+-                    opacity = 1
+-                } else if (positionState == "raised") {
+-                    offsetAnimation.from = offset
+-                    offsetAnimation.to = lockScreen.peekFilter.threshold * 0.5
+-                    offsetAnimation.duration = 400
+-                    offsetAnimation.restart()
+-                    opacityAnimation.duration = 400
+-                    opacityAnimation.to = 0
+-                    opacityAnimation.restart()
+-                } else {
+-                    offsetAnimation.from = offset
+-                    offsetAnimation.to = 0
+-                    offsetAnimation.duration = 500
+-                    offsetAnimation.restart()
+-                    opacityAnimation.duration = 500
+-                    opacityAnimation.to = 1
+-                    opacityAnimation.restart()
+-                }
+-            }
+-
+-            FadeAnimation {
+-                id: opacityAnimation
+-                target: clock
+-            }
+-
+-            NumberAnimation on animationOffset {
+-                id: offsetAnimation
+-                running: false
+-                easing.type: Easing.InOutQuad
+-            }
+-
+-            anchors {
+-                horizontalCenter: parent.horizontalCenter
+-                topMargin: cannotCenter ? Theme.paddingLarge - offset : 0
+-                verticalCenterOffset: !cannotCenter ? -offset : 0
+-            }
+-
+-            color: lockScreen.textColor
+-            updatesEnabled: visible
+-
+-            states: [
+-                State {
+-                    when: clock.cannotCenter
+-                    AnchorChanges {
+-                        target: clock
+-                        anchors { top: contentItem.top; verticalCenter: undefined }
+-                    }
+-                }, State {
+-                    when: !clock.cannotCenter
+-                    AnchorChanges {
+-                        target: clock
+-                        anchors { top: undefined; verticalCenter: contentItem.verticalCenter }
+-                    }
+-                }
+-            ]
+-        }
+-
++    PortraitWidgets {anchors.fill:parent 
++    visible: lockScreenPage.isPortrait 
++}
++    LandscapeWidgets {anchors.fill:parent 
++    visible: !lockScreenPage.isPortrait 
++}
+         OngoingCall {
+-            opacity: clock.opacity
+-            visible: clock.visible
++            opacity: 1.0
++            //visible: clock.visible
+             anchors {
+                 // Positions above media controls and below the event icons.
+                 verticalCenter: parent.verticalCenter
+diff -rupN original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml
+--- original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml	2015-11-21 15:25:42.000000000 +0000
++++ patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml	2015-12-03 08:31:33.000000000 +0000
+@@ -148,8 +148,8 @@ ApplicationWindow {
+                 updatesEnabled: lockScreen.locked
+                 color: lockScreen.textColor
+                 opacity: !waitingSystemStart.running && vignette.opened
+-                         ? (deviceLockContainer.isCurrentItem ? deviceLockItem.opacity : lockItem.clock.opacity)
+-                         : 0.0
++                         ? (deviceLockContainer.isCurrentItem ? deviceLockItem.opacity : 1.0)
++                         : 1.0
+             }
+ 
+             BusyIndicator {
+@@ -410,7 +410,7 @@ ApplicationWindow {
+                             visible: !waitingSystemStart.running
+                             allowAnimations: vignette.opened
+                             iconSuffix: lockScreen.iconSuffix
+-                            clock.followPeekPosition: !parent.rightItem
++                            //clock.followPeekPosition: !parent.rightItem
+ 
+                             Binding { target: lockItem.mpris.item; property: "enabled"; value: !lockScreen.lowPowerMode }
+                         }
+diff -rupN original/usr/share/lipstick-jolla-home-qt5/main.qml patch/usr/share/lipstick-jolla-home-qt5/main.qml
+--- original/usr/share/lipstick-jolla-home-qt5/main.qml	2015-11-23 06:18:54.000000000 +0000
++++ patch/usr/share/lipstick-jolla-home-qt5/main.qml	2015-11-23 06:24:04.000000000 +0000
+@@ -1,4 +1,4 @@
+-﻿/****************************************************************************
++/****************************************************************************
+ **
+ ** Copyright (C) 2013 Jolla Ltd.
+ ** Contact: Petri M. Gerdt <petri.gerdt@jollamobile.com>
+@@ -24,9 +24,7 @@ ApplicationWindow {
+     }
+ 
+     allowedOrientations: {
+-        var allowedOrientations = Screen.sizeCategory > Screen.Medium
+-                ? defaultAllowedOrientations
+-                : defaultAllowedOrientations & Orientation.PortraitMask
++        var allowedOrientations = defaultAllowedOrientations
+ 
+         if (Lipstick.compositor.alarmLayer.window
+                     && (Lipstick.compositor.alarmLayer.window.orientation & allowedOrientations)) {
