@@ -18,8 +18,8 @@ Page {
             Rectangle
             {
                 id: rect
-                height: model.height == "variable" ? 100 : model.height*Screen.height 
-                width: model.width == "variable" ? 100 : model.width* Screen.width
+                height: model.height == "variable" ? 200 : model.height*Screen.height 
+                width: model.width == "variable" ? 200 : model.width* Screen.width
                 x: model.x
                 color: "transparent"
                 border.color: Theme.primaryColor
@@ -79,10 +79,10 @@ if(model.height == "variable") t = t +  "\nvariable height"}
             if(widget.isVisible)
             {
                var xPos
-               if (page.isPortrait) xPos = Screen.width -( widget.width == "variable" ? 100 : widget.width* Screen.width)
-               else  xPos = Screen.height -( widget.width == "variable" ? 100 : widget.width* Screen.width)
+               if (page.isPortrait) xPos = Screen.width -( widget.width == "variable" ? 200 : widget.width* Screen.width)
+               else  xPos = Screen.height -( widget.width == "variable" ? 200 : widget.width* Screen.width)
                itemModel.append({name:widget.name, height:widget.height,width:widget.width,x:xPos,y:yPos})
-               yPos = yPos + (widget.height == "variable" ?  100 : widget.height) 
+               yPos = yPos + (widget.height == "variable" ?  200 : widget.height) 
             }
         }
     }

@@ -124,14 +124,14 @@ def createQML():
 
 def appendWidget(visibleWidget):
     data = next(item for item in widgets if item["name"]==visibleWidget.name)
-    hPixels = 100.0
+    hPixels = 200.0
     if(visibleWidget.height != "variable"):
         hPixels = float(visibleWidget.height)*screenHeight  
 
-    wPixels = 100.0
+    wPixels = 200.0
     if(visibleWidget.width != "variable"):
         wPixels = float(visibleWidget.width)*screenWidth
-    xy = width - (visibleWidget.x + wPixels) + visibleWidget.y 
+    xy = (width - (visibleWidget.x + wPixels))*(width - (visibleWidget.x + wPixels)) + visibleWidget.y*visibleWidget.y 
     a_dict = {'x': visibleWidget.x , 'y': visibleWidget.y, 'h': hPixels, 'w':wPixels, 'xy': xy}
     data.update(a_dict) 
     visibleWidgets.append(data)

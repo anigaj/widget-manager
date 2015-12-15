@@ -1,0 +1,11 @@
+{
+    "name": "clock no date",
+    "description": "Default jolla clock with no animations and no date",
+    "path":"/usr/share/widgetManager/widgets/clock-simple-nodate",
+    "main": "ClockNoDate",
+    "height": "0.133",
+    "width": "0.504",
+	"infos": {
+        "maintainer": "Anant Gajjar"
+	}
+}

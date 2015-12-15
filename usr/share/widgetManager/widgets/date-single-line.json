@@ -1,0 +1,11 @@
+{
+    "name": "date single line",
+    "description": "Date on single line",
+    "path":"/usr/share/widgetManager/widgets/date-single-line",
+    "main": "DateSingle",
+    "height": "0.058",
+    "width": "0.63",
+	"infos": {
+        "maintainer": "Anant Gajjar"
+	}
+}

@@ -1,0 +1,11 @@
+{
+    "name": "date widget",
+    "description": "Date widget",
+    "path":"/usr/share/widgetManager/widgets/date-widget",
+    "main": "DateWidget",
+    "height": "0.099",
+    "width": "0.278",
+	"infos": {
+        "maintainer": "Anant Gajjar"
+	}
+}
