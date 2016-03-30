@@ -1,5 +1,5 @@
 Name:          widget-manager
-Version:       0.1
+Version:       0.2
 Release:       1
 Summary:       Lock screen patch
 Group:         System/Patches
@@ -9,10 +9,16 @@ Packager: Anant Gajjar
 License:       GPL
 Requires: patchmanager
 Requires: sailfish-version >= 1.1.9
+Requires: pyotherside-qml-plugin-python3-qt5
+Requires: libsailfishapp-launcher
+Conflicts: lockscreen-upcoming
+Conflicts: sailfishos-statusbar-on-sneak-peek
+Conflicts: sailfishos-show-weather-on-lockscreen
+Conflicts: saifishos-analog-lockscreen-clock 
 BuildArch: noarch
 
 %description
-This is a patch and application that allow the lockscreen to be configured using widget components. The patch modifies the lockscreen files to use the widget items and also removes the clock.
+This is a patch and application that allows the lockscreen to be configured using widget components. The patch modifies the lockscreen files to use the widget items and also removes the clock.
 
 The application is used to manage the lockscreen portrait and landscape layouts. Different widgets can be used in each layout. The jolla-clock is included as a widget in the installation.
 
@@ -29,26 +35,32 @@ The application is used to manage the lockscreen portrait and landscape layouts.
 
 %post
 %preun
-    // Do stuff specific to uninstalls
+ 
 if [ -f /usr/sbin/patchmanager ]; then
 /usr/sbin/patchmanager -u widget-manager || true
 fi
 
 %postun
 if [ $1 = 0 ]; then
-    // Do stuff specific to uninstalls
+
 rm -rf /usr/share/patchmanager/patches/widget-manager || true
 rm -rf /usr/share/widgetManager || true
 rm -rf /home/nemo/widgetManager  || true 
 else
 if [ $1 = 1 ]; then
-    // Do stuff specific to upgrades
+    
 echo "It's just upgrade"
 fi
 fi
 
 %changelog
-*Wed Dec 02 2015 Builder <builder@...>
+*Mon Mar 14 2015 Builder <builder@...>
+0.2
+- Added gridlines, configurable through settings
+- Settings to control lockscreen/homescreen
+- Fixed jolla clock animations
+- Improved placement algorithm
+- Added requirements and conflicts in spec file
 
 0.1
-- First build.
+- First build

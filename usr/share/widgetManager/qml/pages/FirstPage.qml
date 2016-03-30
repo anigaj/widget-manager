@@ -2,25 +2,33 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import io.thp.pyotherside 1.4
+import org.nemomobile.configuration 1.0
 
 Page 
 {
     id: page
     allowedOrientations: Orientation.All
-    SilicaFlickable {
-    anchors.fill: parent 
-    SilicaListView
+    ConfigurationGroup
     {
-        id: listView
-        anchors.fill: parent
-        model: app.allWidgets
-        delegate: WidgetItem
+        id: widgetSettings
+        path: "/desktop/lipstick-jolla-home/widgetManager"
+        property bool debugMode: false
+    }
+    SilicaFlickable
+    {
+        anchors.fill: parent 
+        SilicaListView
         {
-            widgetName: model.name
-        }
-    } 
+            id: listView
+            anchors.fill: parent
+            model: app.allWidgets
+            delegate: WidgetItem
+            {
+                widgetName: model.name
+            }
+        } 
 
-    Component.onCompleted: {
+        Component.onCompleted: {
             python.call('widgets.getWidgets',[],function(widgets) {
                 var result_length = widgets.length;
                 app.allWidgets.clear();
@@ -28,24 +36,38 @@ Page
                     app.allWidgets.append(widgets[i]);
                 }
             });
-    }
+        }
 
-    PullDownMenu {
-        MenuItem{
-            id: previewPage
-            text: "Apply New Layout"
-            onClicked:{
-                try {
-                    pageStack.push(Qt.resolvedUrl("WidgetSuccess.qml"))
-                }
-                catch(e) {
-            python.call('widgets.cancelLayout',[],function() {})
-                    pageStack.push(Qt.resolvedUrl("WidgetError.qml"))
-                }
-            } 
+        PullDownMenu
+        {
+            MenuItem
+            {
+                id: previewPage
+                text: "Apply New Layout"
+                onClicked:{
+                    try
+                    {
+                        pageStack.push(Qt.resolvedUrl("WidgetSuccess.qml"))
+                    }
+                    catch(e)
+                    {
+                        python.call('widgets.cancelLayout',[],function() {})
+                        if (widgetSettings.debugMode)
+                        {
+                            console.log(e)
+                        }
+                        pageStack.push(Qt.resolvedUrl("WidgetError.qml"))
+                    }
+                } 
+            }
+            MenuItem
+            {
+                id: settings 
+                text: "Settings"
+                onClicked: pageStack.push(Qt.resolvedUrl("WidgetSettings.qml"))
+            }
         }
     }
-}
     onStatusChanged: {
         if(status === PageStatus.Active) pageStack.pushAttached(Qt.resolvedUrl("ArrangeWidgets.qml")) 
     }

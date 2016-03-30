@@ -4,13 +4,20 @@ import Sailfish.Silica 1.0
 import io.thp.pyotherside 1.4
 import "file:///home/nemo/widgetManager"
 import org.nemomobile.dbus 2.0
+import org.nemomobile.configuration 1.0
 
 Page 
 {
     id: page
     allowedOrientations: Orientation.All
-   
-    DBusInterface {
+    ConfigurationGroup
+    {
+        id: widgetSettings
+        path: "/desktop/lipstick-jolla-home/widgetManager"
+        property bool debugMode: false
+    }   
+    DBusInterface
+    {
         id: systemdServiceIface
         bus: DBus.SessionBus
         service: 'org.freedesktop.systemd1'
@@ -21,23 +28,24 @@ Page
     PortraitWidgets
     {
         anchors.fill:parent 
-        visible: false
+        visible: widgetSettings.debugMode && page.isPortrait
     }
     LandscapeWidgets
     {
         anchors.fill:parent 
-        visible: false
+        visible: widgetSettings.debugMode && !page.isPortrait
     }
     Label
     {
         text: "Restarting Homescreen"
         anchors.centerIn: parent
+        visible:! widgetSettings.debugMode
     }
     height :Screen.height 
     width: Screen.width
 
     Component.onCompleted: {
             python.call('widgets.backupLayout',[],function() {})
-            systemdServiceIface.call("Restart", ["replace"])
+            if(!widgetSettings.debugMode) systemdServiceIface.call("Restart", ["replace"])
     }
 }

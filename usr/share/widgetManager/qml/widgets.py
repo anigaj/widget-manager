@@ -89,12 +89,15 @@ def createQML():
     else:
         file = open("widgetManager/LandscapeWidgets.qml","w")
 
+    # sort based on distance to center of widget from top right
     visibleWidgetsx = sorted(visibleWidgets, key=lambda k: k['xy'])
 
     header = "import QtQuick 2.0\nimport Sailfish.Silica 1.0\n"
     body = "Item{\nanchors.fill: parent\n"
     topLine = True
     sameLine = False
+
+    #Loop over widgets
     for index, visibleWidget in enumerate(visibleWidgetsx):
         header = header + "import \"file://" + visibleWidget['path'] + "\"\n"
         body = body + visibleWidget['main'] + "{\nid: " + visibleWidget['main'].lower() + "\nanchors{\ntop: "
@@ -103,19 +106,23 @@ def createQML():
                 topLine = False
                 sameLine = False
             else:
-                sameLine = True 
+                if((visibleWidget['y'] + visibleWidget['h']) <  visibleWidgetsx[index-1]['y']):
+                    topLine = True
+                else:
+                    sameLine = True 
         if(topLine):
             body = body +  "parent.top\ntopMargin: " + str(visibleWidget['y']) +  "\n"
             if(sameLine):
                 body = body + "right: "+visibleWidgetsx[index-1]['main'].lower() + ".left\nrightMargin: " +  str(visibleWidgetsx[index-1]['x'] -(visibleWidget['x'] + visibleWidget['w'])) +  "\n}\n"
             else:
-                body = body + "right: parent.right\nrightMargin: " +  str(width  - (visibleWidget['x'] + visibleWidget['w'])) +  "\n}\n"
+                body = body + getHorizontalAnchor(visibleWidget['x'],visibleWidget['x']+visibleWidget['w']/2,visibleWidget['x']+visibleWidget['w']) +  "\n}\n" 
+
         else:
             body = body +visibleWidgetsx[index-1]['main'].lower() + ".bottom\ntopMargin: " + str(visibleWidget['y'] - (visibleWidgetsx[index-1]['y'] +visibleWidgetsx[index-1]['h'])) +  "\n"
             if(sameLine):
                 body = body + "right: "+visibleWidgetsx[index-1]['main'].lower() + ".left\nrightMargin: " +  str(visibleWidgetsx[index-1]['x'] -(visibleWidget['x'] + visibleWidget['w'])) +  "\n}\n"
             else:
-                body = body + "right: parent.right\nrightMargin: " +  str(width  - (visibleWidget['x'] + visibleWidget['w'])) +  "\n}\n"
+                body = body + getHorizontalAnchor(visibleWidget['x'],visibleWidget['x']+visibleWidget['w']/2,visibleWidget['x']+visibleWidget['w']) +  "\n}\n" 
 
         body = body + "}\n" 
     body = body + "}"
@@ -131,8 +138,23 @@ def appendWidget(visibleWidget):
     wPixels = 200.0
     if(visibleWidget.width != "variable"):
         wPixels = float(visibleWidget.width)*screenWidth
-    xy = (width - (visibleWidget.x + wPixels))*(width - (visibleWidget.x + wPixels)) + visibleWidget.y*visibleWidget.y 
+    xy = (width - (visibleWidget.x + wPixels/2))*(width - (visibleWidget.x + wPixels/2)) + (visibleWidget.y+hPixels/2)*(visibleWidget.y+hPixels/2) 
     a_dict = {'x': visibleWidget.x , 'y': visibleWidget.y, 'h': hPixels, 'w':wPixels, 'xy': xy}
     data.update(a_dict) 
     visibleWidgets.append(data)
+
+def getHorizontalAnchor(left, middle, right):
+    position = []
+
+    a_dict = {'diff': abs(left), 'text':'left:parent.left\nleftMargin:' + str(left)}
+    position.append(a_dict)
     
+    a_dict = {'diff': abs(middle-width/2), 'text':'horizontalCenter:parent.horizontalCenter\nhorizontalCenterOffset:' + str(middle-width/2)}
+    position.append(a_dict)
+
+    a_dict = {'diff': abs(right - width), 'text':'right:parent.right\nrightMargin:'+str(width-right)}
+    position.append(a_dict)
+
+    sortedPos = sorted(position, key=lambda k: k['diff'])
+
+    return sortedPos[0]['text']

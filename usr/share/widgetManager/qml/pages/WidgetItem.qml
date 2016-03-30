@@ -26,5 +26,6 @@ BackgroundItem
     {
         id: nameLabel
         anchors.left: applySwitch.right
+        anchors.verticalCenter: applySwitch.verticalCenter
     }
 }

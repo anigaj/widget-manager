@@ -1,20 +1,90 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import org.nemomobile.configuration 1.0
 
-Page {
+Page 
+{
     id: page
     allowedOrientations: Orientation.All
+    ConfigurationGroup
+    {
+        id: widgetSettings
+        path: "/desktop/lipstick-jolla-home/widgetManager"
+        property bool showGrid: false
+        property int gridSpace: 49
+
+    }
+
     ListModel
     {
         id: itemModel
-
     }
+
+    Column
+    {
+        spacing: widgetSettings.gridSpace
+        visible: widgetSettings.showGrid
+        id: horLines
+        Repeater
+        {
+            model: Math.ceil((page.height-saveButton.height)/(horLines.spacing+1))
+
+            Rectangle
+            {
+                width: page.width
+                height:1
+                color: "yellow"
+                opacity: 0.5
+            }
+        }
+    }
+
+    Row
+    {
+        spacing: widgetSettings.gridSpace
+        visible: widgetSettings.showGrid
+        id: verLines
+        Repeater
+        {  
+            model:Math.ceil( (page.width)/(verLines.spacing+1))
+            Rectangle
+            {
+                width: 1
+                height:page.height-saveButton.height
+                color: "yellow"
+                opacity:0.5
+            }
+        }
+    }
+    Rectangle
+    {
+        width: page.width
+        height:1
+        color: "red"
+        opacity: 1.0
+        visible: widgetSettings.showGrid
+        y: page.height/2
+    }
+    Rectangle
+    {
+        width: 1
+        height:page.height-saveButton.height
+        color: "red"
+        opacity: 1.0
+        visible: widgetSettings.showGrid
+        x: page.width/2
+    }
+
     SilicaListView
     {
-        anchors.fill: parent
+        id: recList
+        width: parent.width 
+        height: parent.height - saveButton.height 
         model: itemModel
-        delegate: Component {
-            id:widgetDelegate 
+        delegate: Component
+        {
+            id:widgetDelegate
+            
             Rectangle
             {
                 id: rect
@@ -45,17 +115,66 @@ if(model.height == "variable") t = t +  "\nvariable height"}
                         item.y = rect.y
                     }
                 }
+                Rectangle 
+                {
+                    width: 1
+                    height: 20
+                    color: "red"
+                    opacity: 1.0
+                    anchors
+                    {
+                        top: parent.top
+                        horizontalCenter: parent.horizontalCenter 
+                    }
+                }
+                Rectangle
+                {
+                    width: 20
+                    height: 1
+                    color: "red"
+                    opacity: 1.0
+                    anchors
+                    {
+                        left: parent.left
+                        verticalCenter: parent.verticalCenter 
+                    }
+                }
+                Rectangle 
+                {
+                    width: 1
+                    height: 20
+                    color: "red"
+                    opacity: 1.0
+                    anchors
+                    {
+                        bottom: parent.bottom
+                        horizontalCenter: parent.horizontalCenter
+                    }
+                }
+                Rectangle
+                {
+                    width: 20
+                    height: 1
+                    color: "red"
+                    opacity: 1.0
+                    anchors
+                    {
+                        right: parent.right
+                        verticalCenter: parent.verticalCenter 
+                    }
+                }
             }
         }
     }
-
     Button 
     {
+        id: saveButton
         text:{ "Save " + (page.isPortrait ? "portrait " : "landscape ") + "layout"   }
         anchors.bottom: parent.bottom
         width: parent.width
-        //onClicked: pageStack.push(Qt.resolvedUrl("ArrangeWidgets.qml"))
-        onClicked:{
+
+        onClicked:
+        {
             python.call('widgets.initWidgets',[Screen.width, Screen.height, page.isPortrait],function() {})
             for( var i = 0; i < itemModel.count; ++i)
             {
@@ -72,7 +191,7 @@ if(model.height == "variable") t = t +  "\nvariable height"}
     function createRectangles()
     {
         itemModel.clear()
-        var yPos = 0
+        var yPos = parseFloat(0)
         for( var i = 0; i < app.allWidgets.count; ++i)
         {
             var widget = app.allWidgets.get(i) 
@@ -82,8 +201,9 @@ if(model.height == "variable") t = t +  "\nvariable height"}
                if (page.isPortrait) xPos = Screen.width -( widget.width == "variable" ? 200 : widget.width* Screen.width)
                else  xPos = Screen.height -( widget.width == "variable" ? 200 : widget.width* Screen.width)
                itemModel.append({name:widget.name, height:widget.height,width:widget.width,x:xPos,y:yPos})
-               yPos = yPos + (widget.height == "variable" ?  200 : widget.height) 
+
+               yPos = yPos + (widget.height == "variable" ?  200 :  parseFloat(widget.height*Screen.height)) 
             }
-        }
+        }  
     }
 }

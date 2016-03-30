@@ -11,7 +11,8 @@ import org.nemomobile.time 1.0
 import org.nemomobile.lipstick 0.1
 import "file:///usr/share/lipstick-jolla-home-qt5/main"
 
-Item {
+Item
+{
     id: clock
 
     property alias time: timeText.time
@@ -23,21 +24,28 @@ Item {
     height: month.font.pixelSize
     baselineOffset: timeText.y + timeText.baselineOffset
 
-    ClockItem {
+    ClockItem
+    {
         id: timeText
         color: Theme.primaryColor
         visible: false
     }
 
-    Text {
+    Text
+    {
         id: month
-        anchors {
+        anchors
+        {
             bottom: parent.top
             bottomMargin: -month.font.pixelSize
             horizontalCenter: parent.horizontalCenter
         }
         color: timeText.color
-        font { pixelSize: Theme.fontSizeExtraLarge * 1.1; family: Theme.fontFamily }
+        font
+        {
+            pixelSize: Theme.fontSizeExtraLarge * 1.1
+            family: Theme.fontFamily
+        }
 
         text:{
             var day = Format.formatDate(time, Format.WeekdayNameStandalone)

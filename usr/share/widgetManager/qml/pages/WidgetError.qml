@@ -14,6 +14,6 @@ Page
         width: parent.width
         wrapMode: Text.WordWrap
     }
-    height :Screen.height 
+    height: Screen.height 
     width: Screen.width
 }

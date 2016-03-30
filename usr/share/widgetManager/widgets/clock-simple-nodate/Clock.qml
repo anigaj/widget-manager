@@ -11,7 +11,8 @@ import org.nemomobile.time 1.0
 import org.nemomobile.lipstick 0.1
 import "file:///usr/share/lipstick-jolla-home-qt5/main"
 
-Item {
+Item
+{
     id: clock
 
     property alias time: timeText.time
@@ -23,15 +24,21 @@ Item {
     height: timeText.font.pixelSize
     baselineOffset: timeText.y + timeText.baselineOffset
 
-    ClockItem {
+    ClockItem
+    {
         id: timeText
         color: Theme.primaryColor
         // Ascender of the time to the top of the clock.
-        anchors {
+        anchors
+        {
             bottom: parent.top
             bottomMargin: -timeText.font.pixelSize
             horizontalCenter: parent.horizontalCenter
         }
-        font { pixelSize: Theme.fontSizeHuge * 2.0; family: Theme.fontFamilyHeading }
+        font
+        {
+            pixelSize: Theme.fontSizeHuge * 2.0
+            family: Theme.fontFamilyHeading
+        }
     }
 }
