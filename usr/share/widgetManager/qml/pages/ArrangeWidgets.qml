@@ -75,6 +75,13 @@ Page
         x: page.width/2
     }
 
+    FineControlBox
+    {
+        id: fcBox
+        isPortrait:page.isPortrait 
+        z: 100
+        isVisible: false
+    }
     SilicaListView
     {
         id: recList
@@ -97,22 +104,30 @@ Page
                 {
                     anchors.fill:parent
                     text: {
-var t
-t = model.name
-if(model.width == "variable") t = t + "\nvariable width"
-if(model.height == "variable") t = t +  "\nvariable height"} 
+                        var t
+                        t = model.name
+                        if(model.width == "variable") t = t + "\nvariable width"
+                        if(model.height == "variable") t = t +  "\nvariable height"} 
                 }
+
                 MouseArea
                 {
                     anchors.fill: parent
                     drag.target: rect
                     onReleased: 
                     {
-                        rect.x = rect.x - rect.x%2
-                        rect.y = rect.y - rect.y%2
                         var item = itemModel.get(model.index)
+                        rect.x = Math.round(rect.x)
                         item.x = rect.x
+                        rect.y = Math.round(rect.y)
                         item.y = rect.y
+                    }
+                    onPressAndHold:
+                    {
+                        fcBox.isVisible = true
+
+                        var item = itemModel.get(model.index)
+                        fcBox.initialise (item,rect)                    
                     }
                 }
                 Rectangle 

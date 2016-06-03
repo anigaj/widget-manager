@@ -102,25 +102,27 @@ def createQML():
         header = header + "import \"file://" + visibleWidget['path'] + "\"\n"
         body = body + visibleWidget['main'] + "{\nid: " + visibleWidget['main'].lower() + "\nanchors{\ntop: "
         if(index > 0):
-            if(visibleWidget['y'] >= ( visibleWidgetsx[index-1]['y'] +visibleWidgetsx[index-1]['h'])):
+            #Check if widget is on the same line as previous (current widget is placed above half previous)
+            if(visibleWidget['y'] >= ( visibleWidgetsx[index-1]['y'] +0.5*visibleWidgetsx[index-1]['h'])):
                 topLine = False
                 sameLine = False
             else:
-                if((visibleWidget['y'] + visibleWidget['h']) <  visibleWidgetsx[index-1]['y']):
+                # Check if we are on the next column of widgets (current widget is higher than the last)
+                if((visibleWidget['y']) <  visibleWidgetsx[index-1]['y']):
                     topLine = True
                 else:
                     sameLine = True 
         if(topLine):
             body = body +  "parent.top\ntopMargin: " + str(visibleWidget['y']) +  "\n"
             if(sameLine):
-                body = body + "right: "+visibleWidgetsx[index-1]['main'].lower() + ".left\nrightMargin: " +  str(visibleWidgetsx[index-1]['x'] -(visibleWidget['x'] + visibleWidget['w'])) +  "\n}\n"
+                body = body + "right: "+visibleWidgetsx[index-1]['main'].lower() + ".left\nrightMargin: " +  str(round(visibleWidgetsx[index-1]['x'] -(visibleWidget['x'] + visibleWidget['w']))) +  "\n}\n"
             else:
                 body = body + getHorizontalAnchor(visibleWidget['x'],visibleWidget['x']+visibleWidget['w']/2,visibleWidget['x']+visibleWidget['w']) +  "\n}\n" 
 
         else:
-            body = body +visibleWidgetsx[index-1]['main'].lower() + ".bottom\ntopMargin: " + str(visibleWidget['y'] - (visibleWidgetsx[index-1]['y'] +visibleWidgetsx[index-1]['h'])) +  "\n"
+            body = body +visibleWidgetsx[index-1]['main'].lower() + ".bottom\ntopMargin: " + str(round(visibleWidget['y'] - (visibleWidgetsx[index-1]['y'] +visibleWidgetsx[index-1]['h']-1))) +  "\n"
             if(sameLine):
-                body = body + "right: "+visibleWidgetsx[index-1]['main'].lower() + ".left\nrightMargin: " +  str(visibleWidgetsx[index-1]['x'] -(visibleWidget['x'] + visibleWidget['w'])) +  "\n}\n"
+                body = body + "right: "+visibleWidgetsx[index-1]['main'].lower() + ".left\nrightMargin: " +  str(round(visibleWidgetsx[index-1]['x'] -(visibleWidget['x'] + visibleWidget['w']))) +  "\n}\n"
             else:
                 body = body + getHorizontalAnchor(visibleWidget['x'],visibleWidget['x']+visibleWidget['w']/2,visibleWidget['x']+visibleWidget['w']) +  "\n}\n" 
 
@@ -146,13 +148,13 @@ def appendWidget(visibleWidget):
 def getHorizontalAnchor(left, middle, right):
     position = []
 
-    a_dict = {'diff': abs(left), 'text':'left:parent.left\nleftMargin:' + str(left)}
+    a_dict = {'diff': abs(left), 'text':'left:parent.left\nleftMargin:' + str(round(left))}
     position.append(a_dict)
     
-    a_dict = {'diff': abs(middle-width/2), 'text':'horizontalCenter:parent.horizontalCenter\nhorizontalCenterOffset:' + str(middle-width/2)}
+    a_dict = {'diff': abs(middle-1-width/2), 'text':'horizontalCenter:parent.horizontalCenter\nhorizontalCenterOffset:' + str(round(middle-1-width/2))}
     position.append(a_dict)
 
-    a_dict = {'diff': abs(right - width), 'text':'right:parent.right\nrightMargin:'+str(width-right)}
+    a_dict = {'diff': abs(right - width), 'text':'right:parent.right\nrightMargin:'+str(round(width-right))}
     position.append(a_dict)
 
     sortedPos = sorted(position, key=lambda k: k['diff'])

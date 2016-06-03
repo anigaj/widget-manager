@@ -1,5 +1,5 @@
 Name:          widget-manager
-Version:       0.2
+Version:       0.3
 Release:       1
 Summary:       Lock screen patch
 Group:         System/Patches
@@ -55,6 +55,8 @@ fi
 
 %changelog
 *Mon Mar 14 2015 Builder <builder@...>
+0.3
+- Implemented a fine control box to move widgets pixel by pixel. Activated by long press.
 0.2
 - Added gridlines, configurable through settings
 - Settings to control lockscreen/homescreen
