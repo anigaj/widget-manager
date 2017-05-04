@@ -8,7 +8,7 @@ Distribution:  SailfishOS
 Packager: Anant Gajjar
 License:       GPL
 Requires: patchmanager
-Requires: sailfish-version >= 1.1.9
+Requires: sailfish-version >= 2.1.0
 Requires: pyotherside-qml-plugin-python3-qt5
 Requires: libsailfishapp-launcher
 Conflicts: lockscreen-upcoming
@@ -57,6 +57,7 @@ fi
 *Mon Mar 14 2015 Builder <builder@...>
 0.3
 - Implemented a fine control box to move widgets pixel by pixel. Activated by long press.
+- Fixed patch for Iijoki compatibility
 0.2
 - Added gridlines, configurable through settings
 - Settings to control lockscreen/homescreen

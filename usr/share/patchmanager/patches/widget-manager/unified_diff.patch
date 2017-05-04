@@ -1,10 +1,10 @@
 diff -rupN original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml
---- original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml	2016-01-12 10:08:21.000000000 +0000
-+++ patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml	2015-11-21 16:02:00.000000000 +0000
-@@ -12,12 +12,13 @@ import com.jolla.lipstick 0.1
- import org.nemomobile.lipstick 0.1
- import org.nemomobile.configuration 1.0
+--- original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml	2017-04-25 14:55:01.000000000 +0100
++++ patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml	2017-04-26 09:47:40.000000000 +0100
+@@ -16,12 +16,13 @@ import org.nemomobile.configuration 1.0
+ import org.nemomobile.systemsettings 1.0
  import "../main"
+ import "../statusarea"
 +import "file:///home/nemo/widgetManager"
  
  SilicaFlickable {
@@ -12,20 +12,23 @@ diff -rupN original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml pa
      readonly property alias indicatorSize: rightIndicator.width
      property bool allowAnimations
 -    property alias clock: clock
-+//    property alias clock: clock
++    //property alias clock: clock
      property alias mpris: mpris
      property alias leftIndicator: leftIndicator
      property alias rightIndicator: rightIndicator
-@@ -110,109 +111,19 @@ SilicaFlickable {
+@@ -236,7 +237,7 @@ SilicaFlickable {
                  mpris.item.anchors.horizontalCenter = Qt.binding(function () { return parent.horizontalCenter })
-                 mpris.item.anchors.bottom = Qt.binding(function () { return parent.bottom })
-                 mpris.item.anchors.bottomMargin = 2 * Theme.paddingLarge
+                 mpris.item.anchors.bottom = Qt.binding(function () { return ongoingCall.top })
+                 mpris.item.anchors.bottomMargin = Theme.paddingMedium
 -                mpris.item.opacity = Qt.binding(function() { return mpris.item && mpris.item.enabled ? clock.opacity : 0.0 })
 +                mpris.item.opacity = Qt.binding(function() { return mpris.item && mpris.item.enabled ? 1.0 : 0.0 })
                  mpris.item.buttonSize = Screen.sizeCategory > Screen.Medium ? Theme.iconSizeExtraLarge : Theme.iconSizeLarge
              }
+ 
+@@ -260,107 +261,20 @@ SilicaFlickable {
+             }
          }
--
+ 
 -        Clock {
 -            id: clock
 -
@@ -40,6 +43,8 @@ diff -rupN original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml pa
 -            property string positionState: {
 -                if (lockScreen.lowPowerMode) {
 -                    return "fixed-center"
+-                } else if (Lipstick.compositor.lockScreenLayer.closing) {
+-                    return "raised"
 -                } else if (!lockScreen.locked && !visible) {
 -                    return "fixed-raised"
 -                } else if (!lockItem.allowAnimations) {
@@ -119,60 +124,73 @@ diff -rupN original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockItem.qml pa
 -                    }
 -                }
 -            ]
--        }
--
-+    PortraitWidgets {anchors.fill:parent 
-+    visible: lockScreenPage.isPortrait 
-+}
-+    LandscapeWidgets {anchors.fill:parent 
-+    visible: !lockScreenPage.isPortrait 
-+}
++        PortraitWidgets {
++            anchors.fill:parent 
++            visible: lockScreenPage.isPortrait 
+         }
+ 
++        LandscapeWidgets {
++            anchors.fill:parent 
++            visible: !lockScreenPage.isPortrait 
++        }
++        
          OngoingCall {
+             id: ongoingCall
 -            opacity: clock.opacity
 -            visible: clock.visible
 +            opacity: 1.0
 +            //visible: clock.visible
              anchors {
-                 // Positions above media controls and below the event icons.
-                 verticalCenter: parent.verticalCenter
+                 bottom: cellularNetworkName.active ? cellularNetworkName.top : parent.bottom
+                 bottomMargin: cellularNetworkName.active ? Theme.paddingMedium : Theme.itemSizeExtraSmall
+@@ -370,8 +284,8 @@ SilicaFlickable {
+         Loader {
+             id: cellularNetworkName
+             active: Telephony.multiSimSupported
+-            opacity: clock.opacity
+-            visible: clock.visible && !lipstickSettings.lowPowerMode
++            opacity: 1.0
++            //visible: clock.visible && !lipstickSettings.lowPowerMode
+             anchors {
+                 bottom: parent.bottom
+                 bottomMargin: Theme.paddingSmall
 diff -rupN original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml
---- original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml	2015-11-21 15:25:42.000000000 +0000
-+++ patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml	2016-01-29 15:51:40.000000000 +0000
-@@ -21,12 +21,19 @@ ApplicationWindow {
+--- original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml	2017-04-25 14:55:26.000000000 +0100
++++ patch/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml	2017-04-26 08:18:48.000000000 +0100
+@@ -24,10 +24,18 @@ ApplicationWindow {
  
      cover: undefined
      _clippingItem.opacity: 1.0
 -    allowedOrientations: Lipstick.compositor.homeOrientation
+-
 +    //allowedOrientations: Lipstick.compositor.homeOrientation
-+            allowedOrientations: widgetSettings.rotateLockscreen ? Orientation.All : Orientation.Portrait
- 
++      allowedOrientations: widgetSettings.rotateLockscreen ? Orientation.All : Orientation.Portrait
++    
      initialPage: Component {
          Page {
-+
-+    ConfigurationGroup {
-+        id: widgetSettings
-+        path: "/desktop/lipstick-jolla-home/widgetManager"
-+        property bool rotateLockscreen: true
-+    }
++            
++            ConfigurationGroup {
++                id: widgetSettings
++                path: "/desktop/lipstick-jolla-home/widgetManager"
++                property bool rotateLockscreen: true
++            }
++            
              id: lockScreenPage
--            allowedOrientations: Orientation.All
-+            allowedOrientations: widgetSettings.rotateLockscreen ? Orientation.All : Orientation.Portrait
+             allowedOrientations: Orientation.All
              property bool displayOnFromLowPowerMode
- 
-             Vignette {
-@@ -148,8 +155,8 @@ ApplicationWindow {
+@@ -172,8 +180,8 @@ ApplicationWindow {
                  updatesEnabled: lockScreen.locked
                  color: lockScreen.textColor
-                 opacity: !waitingSystemStart.running && vignette.opened
+                 opacity: systemStarted.value && vignette.opened
 -                         ? (deviceLockContainer.isCurrentItem ? deviceLockItem.opacity : lockItem.clock.opacity)
 -                         : 0.0
-+                         ? (deviceLockContainer.isCurrentItem ? deviceLockItem.opacity : 1.0)
-+                         : 1.0
++                    ? (deviceLockContainer.isCurrentItem ? deviceLockItem.opacity : 1.0)
++                     : 1.0
+                 z: 1
              }
  
-             BusyIndicator {
-@@ -410,7 +417,7 @@ ApplicationWindow {
-                             visible: !waitingSystemStart.running
+@@ -471,7 +479,7 @@ ApplicationWindow {
+                             visible: systemStarted.value
                              allowAnimations: vignette.opened
                              iconSuffix: lockScreen.iconSuffix
 -                            clock.followPeekPosition: !parent.rightItem
@@ -181,15 +199,15 @@ diff -rupN original/usr/share/lipstick-jolla-home-qt5/lockscreen/LockScreen.qml 
                              Binding { target: lockItem.mpris.item; property: "enabled"; value: !lockScreen.lowPowerMode }
                          }
 diff -rupN original/usr/share/lipstick-jolla-home-qt5/main.qml patch/usr/share/lipstick-jolla-home-qt5/main.qml
---- original/usr/share/lipstick-jolla-home-qt5/main.qml	2015-11-23 06:18:54.000000000 +0000
-+++ patch/usr/share/lipstick-jolla-home-qt5/main.qml	2016-01-24 23:01:25.000000000 +0000
+--- original/usr/share/lipstick-jolla-home-qt5/main.qml	2017-04-25 14:54:02.000000000 +0100
++++ patch/usr/share/lipstick-jolla-home-qt5/main.qml	2017-04-25 15:02:13.000000000 +0100
 @@ -1,4 +1,4 @@
 -﻿/****************************************************************************
 +/****************************************************************************
  **
  ** Copyright (C) 2013 Jolla Ltd.
  ** Contact: Petri M. Gerdt <petri.gerdt@jollamobile.com>
-@@ -22,11 +22,14 @@ ApplicationWindow {
+@@ -24,11 +24,15 @@ ApplicationWindow {
      function desktopInstance() {
          return Desktop.instance
      }
@@ -199,6 +217,7 @@ diff -rupN original/usr/share/lipstick-jolla-home-qt5/main.qml patch/usr/share/l
 +        property bool rotateHomescreen: true
  
 +    }
++    
      allowedOrientations: {
 -        var allowedOrientations = Screen.sizeCategory > Screen.Medium
 -                ? defaultAllowedOrientations

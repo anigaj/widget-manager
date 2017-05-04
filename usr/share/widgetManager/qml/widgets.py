@@ -45,13 +45,14 @@ screenHeight = 0
 isPortrait = 0
 width = 0
 
+#Function that populate list of widgets from json files, appends isVisible and custom anchor attributes to each widget.
 def getWidgets():
 
     path_to_json = '/usr/share/widgetManager/widgets/'
     json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
 
     widgets.clear()
-    a_dict = {'isVisible':0} 
+    a_dict = {'isVisible':0, 'custAnc':0} 
     for js in json_files:
         with open(os.path.join(path_to_json, js)) as json_file:
             data = json.load(json_file)
@@ -59,7 +60,8 @@ def getWidgets():
             widgets.append(data)
 
     return widgets
-  
+
+#clear widget array and initialise heights and widths
 def initWidgets(sWidth, sHeight, isPort):
     visibleWidgets.clear()
     global screenWidth 
@@ -75,14 +77,17 @@ def initWidgets(sWidth, sHeight, isPort):
     else:
         width = sHeight
 
+#Called when there us an error, reverts back to the back up files
 def cancelLayout():
     shutil.copyfile("widgetManager/PortraitWidgets.qml.old","widgetManager/PortraitWidgets.qml")
     shutil.copyfile("widgetManager/LandscapeWidgets.qml.old","widgetManager/LandscapeWidgets.qml")
 
+#Back up last good configuration
 def backupLayout():
     shutil.copyfile("widgetManager/PortraitWidgets.qml","widgetManager/PortraitWidgets.qml.old")
     shutil.copyfile("widgetManager/LandscapeWidgets.qml","widgetManager/LandscapeWidgets.qml.old")
 
+#Create the new qml file
 def createQML():
     if(isPortrait):
         file = open("widgetManager/PortraitWidgets.qml","w")
@@ -131,6 +136,7 @@ def createQML():
     file.write(header)
     file.write(body)
 
+# Add widget to visibleWidget array
 def appendWidget(visibleWidget):
     data = next(item for item in widgets if item["name"]==visibleWidget.name)
     hPixels = 200.0
@@ -140,11 +146,13 @@ def appendWidget(visibleWidget):
     wPixels = 200.0
     if(visibleWidget.width != "variable"):
         wPixels = float(visibleWidget.width)*screenWidth
+    # Calculate hypotenuse squared (distance from top right)
     xy = (width - (visibleWidget.x + wPixels/2))*(width - (visibleWidget.x + wPixels/2)) + (visibleWidget.y+hPixels/2)*(visibleWidget.y+hPixels/2) 
     a_dict = {'x': visibleWidget.x , 'y': visibleWidget.y, 'h': hPixels, 'w':wPixels, 'xy': xy}
     data.update(a_dict) 
     visibleWidgets.append(data)
 
+#Determine whether we need to left, middle or right anchor nased on distance to each
 def getHorizontalAnchor(left, middle, right):
     position = []
 
