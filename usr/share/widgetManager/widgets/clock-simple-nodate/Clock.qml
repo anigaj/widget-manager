@@ -7,9 +7,9 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Lipstick 1.0
 import org.nemomobile.time 1.0
 import org.nemomobile.lipstick 0.1
-import "file:///usr/share/lipstick-jolla-home-qt5/main"
 
 Item
 {

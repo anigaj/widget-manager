@@ -1,7 +1,7 @@
 import QtQuick 2.2
 import Sailfish.Silica 1.0
 import "file:///usr/share/lipstick-jolla-home-qt5/lockscreen"
-
+ 
 Item
 {
     height: clock.height 

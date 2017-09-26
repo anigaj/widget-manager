@@ -7,22 +7,20 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Lipstick 1.0
 import org.nemomobile.time 1.0
 import org.nemomobile.lipstick 0.1
-import "file:///usr/share/lipstick-jolla-home-qt5/main"
 
 Item
 {
     id: clock
 
     property alias time: timeText.time
-    property alias color: timeText.color
-    property bool followPeekPosition
+    property alias color: month.color
     property alias updatesEnabled: timeText.updatesEnabled
 
     width: month.width
-    height: month.font.pixelSize
-    baselineOffset: timeText.y + timeText.baselineOffset
+    height: month.height
 
     ClockItem
     {
@@ -36,11 +34,9 @@ Item
         id: month
         anchors
         {
-            bottom: parent.top
-            bottomMargin: -month.font.pixelSize
             horizontalCenter: parent.horizontalCenter
         }
-        color: timeText.color
+        color: Theme.primaryColor
         font
         {
             pixelSize: Theme.fontSizeExtraLarge * 1.1

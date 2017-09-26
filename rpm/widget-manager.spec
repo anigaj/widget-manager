@@ -1,5 +1,5 @@
 Name:          widget-manager
-Version:       0.3
+Version:       0.4
 Release:       1
 Summary:       Lock screen patch
 Group:         System/Patches
@@ -8,11 +8,10 @@ Distribution:  SailfishOS
 Packager: Anant Gajjar
 License:       GPL
 Requires: patchmanager
-Requires: sailfish-version >= 2.1.0
+Requires: sailfish-version >= 2.1.1
 Requires: pyotherside-qml-plugin-python3-qt5
 Requires: libsailfishapp-launcher
 Conflicts: lockscreen-upcoming
-Conflicts: sailfishos-statusbar-on-sneak-peek
 Conflicts: sailfishos-show-weather-on-lockscreen
 Conflicts: saifishos-analog-lockscreen-clock 
 BuildArch: noarch
@@ -55,6 +54,15 @@ fi
 
 %changelog
 *Mon Mar 14 2015 Builder <builder@...>
+0.4
+- Implemented preview of the widgets on the arrange widgets screen
+- Fine control box draggable from top right corner
+- Added switch in settings to turn off anchor based positioning and use x y instead
+- Added custom anchor functionality in fine control box to define horizontal and vertical anchoring for each widget
+-  Added settings to independently change rotation for lpm screen, lock screen and home screen
+- Fixed patch for Jämsänjoki compatibility
+- Added workaround, now compatible with Ultimate Statusbar patch
+
 0.3
 - Implemented a fine control box to move widgets pixel by pixel. Activated by long press.
 - Fixed patch for Iijoki compatibility

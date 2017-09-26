@@ -3,8 +3,7 @@
     "description": "Default jolla clock with animations",
     "path":"/usr/share/widgetManager/widgets/jolla-lock-clock",
     "main": "JollaLockClock",
-    "height": "0.257",
-    "width": "0.504",
+    "preview": "JollaLockClockPreview",
 	"infos": {
         "maintainer": "Anant Gajjar"
 	}

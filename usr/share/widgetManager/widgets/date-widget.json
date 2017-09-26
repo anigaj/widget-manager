@@ -3,8 +3,7 @@
     "description": "Date widget",
     "path":"/usr/share/widgetManager/widgets/date-widget",
     "main": "DateWidget",
-    "height": "0.099",
-    "width": "0.278",
+    "preview": "DateWidgetPreview",
 	"infos": {
         "maintainer": "Anant Gajjar"
 	}

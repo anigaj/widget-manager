@@ -45,14 +45,14 @@ screenHeight = 0
 isPortrait = 0
 width = 0
 
-#Function that populate list of widgets from json files, appends isVisible and custom anchor attributes to each widget.
+#Function that populate list of widgets from json files and appends isVisible
 def getWidgets():
 
     path_to_json = '/usr/share/widgetManager/widgets/'
     json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
 
     widgets.clear()
-    a_dict = {'isVisible':0, 'custAnc':0} 
+    a_dict = {'isVisible':0} 
     for js in json_files:
         with open(os.path.join(path_to_json, js)) as json_file:
             data = json.load(json_file)
@@ -68,16 +68,18 @@ def initWidgets(sWidth, sHeight, isPort):
     global screenHeight
     global isPortrait
     global width
-
+    global height
     screenWidth = sWidth
     screenHeight = sHeight
     isPortrait = isPort
     if(isPort):
         width = sWidth
+        height = sHeight
     else:
         width = sHeight
+        height = sWidth
 
-#Called when there us an error, reverts back to the back up files
+#Called when there is an error, reverts back to the back up files
 def cancelLayout():
     shutil.copyfile("widgetManager/PortraitWidgets.qml.old","widgetManager/PortraitWidgets.qml")
     shutil.copyfile("widgetManager/LandscapeWidgets.qml.old","widgetManager/LandscapeWidgets.qml")
@@ -86,8 +88,26 @@ def cancelLayout():
 def backupLayout():
     shutil.copyfile("widgetManager/PortraitWidgets.qml","widgetManager/PortraitWidgets.qml.old")
     shutil.copyfile("widgetManager/LandscapeWidgets.qml","widgetManager/LandscapeWidgets.qml.old")
+#Create the new qml file using x y positions
+def createQMLxy():
+    if(isPortrait):
+        file = open("widgetManager/PortraitWidgets.qml","w")
+    else:
+        file = open("widgetManager/LandscapeWidgets.qml","w")
 
-#Create the new qml file
+    header = "import QtQuick 2.0\nimport Sailfish.Silica 1.0\n"
+    body = "Item{\nanchors.fill: parent\n"
+    #Loop over widgets
+    for index, visibleWidget in enumerate(visibleWidgets):                                                                        
+
+        header = header + "import \"file://" + visibleWidget['path'] + "\"\n"
+        body = body + visibleWidget['main'] + "{\nid: " + visibleWidget['main'].lower() + "\nx: " +str(round( visibleWidget['x'] ))+ "\ny: " + str(round( visibleWidget['y'] )) + "}\n"
+ 
+    body = body + "}"
+    file.write(header)
+    file.write(body)
+
+#Create the new qml file using anchors
 def createQML():
     if(isPortrait):
         file = open("widgetManager/PortraitWidgets.qml","w")
@@ -105,7 +125,7 @@ def createQML():
     #Loop over widgets
     for index, visibleWidget in enumerate(visibleWidgetsx):
         header = header + "import \"file://" + visibleWidget['path'] + "\"\n"
-        body = body + visibleWidget['main'] + "{\nid: " + visibleWidget['main'].lower() + "\nanchors{\ntop: "
+        body = body + visibleWidget['main'] + "{\nid: " + visibleWidget['main'].lower()
         if(index > 0):
             #Check if widget is on the same line as previous (current widget is placed above half previous)
             if(visibleWidget['y'] >= ( visibleWidgetsx[index-1]['y'] +0.5*visibleWidgetsx[index-1]['h'])):
@@ -117,19 +137,19 @@ def createQML():
                     topLine = True
                 else:
                     sameLine = True 
-        if(topLine):
-            body = body +  "parent.top\ntopMargin: " + str(visibleWidget['y']) +  "\n"
-            if(sameLine):
-                body = body + "right: "+visibleWidgetsx[index-1]['main'].lower() + ".left\nrightMargin: " +  str(round(visibleWidgetsx[index-1]['x'] -(visibleWidget['x'] + visibleWidget['w']))) +  "\n}\n"
-            else:
-                body = body + getHorizontalAnchor(visibleWidget['x'],visibleWidget['x']+visibleWidget['w']/2,visibleWidget['x']+visibleWidget['w']) +  "\n}\n" 
+        if(topLine and visibleWidget['hAnchor']=="auto"):
+            body = body + "\nanchors{\ntop: parent.top\ntopMargin: " + str(visibleWidget['y']) +  "\n"
+        elif(visibleWidget['hAnchor']=="auto"):
+            body = body +"\nanchors{\ntop:" +visibleWidgetsx[index-1]['main'].lower() + ".bottom\ntopMargin: " + str(round(visibleWidget['y'] - (visibleWidgetsx[index-1]['y'] +visibleWidgetsx[index-1]['h']))) +  "\n"
+        else:                                                                                                                                                                            
+            body = body + getPositionInfoH(visibleWidget)+  "\n" 
 
+        if(sameLine and visibleWidget['vAnchor']=="auto"):
+            body = body + "right: "+visibleWidgetsx[index-1]['main'].lower() + ".left\nrightMargin: " +  str(round(visibleWidgetsx[index-1]['x'] -(visibleWidget['x'] + visibleWidget['w']))) +  "\n}\n"
+        elif(visibleWidget['vAnchor']=="auto"):
+            body = body + getHorizontalAnchor(visibleWidget['x'],visibleWidget['x']+visibleWidget['w']/2,visibleWidget['x']+visibleWidget['w']) +  "\n}\n" 
         else:
-            body = body +visibleWidgetsx[index-1]['main'].lower() + ".bottom\ntopMargin: " + str(round(visibleWidget['y'] - (visibleWidgetsx[index-1]['y'] +visibleWidgetsx[index-1]['h']-1))) +  "\n"
-            if(sameLine):
-                body = body + "right: "+visibleWidgetsx[index-1]['main'].lower() + ".left\nrightMargin: " +  str(round(visibleWidgetsx[index-1]['x'] -(visibleWidget['x'] + visibleWidget['w']))) +  "\n}\n"
-            else:
-                body = body + getHorizontalAnchor(visibleWidget['x'],visibleWidget['x']+visibleWidget['w']/2,visibleWidget['x']+visibleWidget['w']) +  "\n}\n" 
+            body = body + getPositionInfoV(visibleWidget)+  "\n}\n" 
 
         body = body + "}\n" 
     body = body + "}"
@@ -137,18 +157,17 @@ def createQML():
     file.write(body)
 
 # Add widget to visibleWidget array
-def appendWidget(visibleWidget):
+#def appendWidget(vwName, vwHeight, vwWidth, vwX, vwY ):                                                                                                                                                                                                    
+def appendWidget(vwx,vwy, visibleWidget):                                                                                                                                                                                                    
+#need to bring in x and y directly as there seems to be a caching bug
     data = next(item for item in widgets if item["name"]==visibleWidget.name)
-    hPixels = 200.0
-    if(visibleWidget.height != "variable"):
-        hPixels = float(visibleWidget.height)*screenHeight  
 
-    wPixels = 200.0
-    if(visibleWidget.width != "variable"):
-        wPixels = float(visibleWidget.width)*screenWidth
+    hPixels = float(visibleWidget.height)
+    wPixels = float(visibleWidget.width)
+
     # Calculate hypotenuse squared (distance from top right)
-    xy = (width - (visibleWidget.x + wPixels/2))*(width - (visibleWidget.x + wPixels/2)) + (visibleWidget.y+hPixels/2)*(visibleWidget.y+hPixels/2) 
-    a_dict = {'x': visibleWidget.x , 'y': visibleWidget.y, 'h': hPixels, 'w':wPixels, 'xy': xy}
+    xy = (width - (vwx + wPixels/2))*(width - (vwx + wPixels/2)) + (vwy+hPixels/2)*(vwy+hPixels/2) 
+    a_dict = {'x': vwx , 'y': vwy, 'h': hPixels, 'w':wPixels, 'xy': xy, 'hAnchor': visibleWidget.hAnchor, 'hAnchorTo': visibleWidget.hAnchorTo, 'hAnchorItem': visibleWidget.hAnchorItem, 'vAnchor': visibleWidget.vAnchor, 'vAnchorTo': visibleWidget.vAnchorTo, 'vAnchorItem': visibleWidget.vAnchorItem }
     data.update(a_dict) 
     visibleWidgets.append(data)
 
@@ -159,7 +178,7 @@ def getHorizontalAnchor(left, middle, right):
     a_dict = {'diff': abs(left), 'text':'left:parent.left\nleftMargin:' + str(round(left))}
     position.append(a_dict)
     
-    a_dict = {'diff': abs(middle-1-width/2), 'text':'horizontalCenter:parent.horizontalCenter\nhorizontalCenterOffset:' + str(round(middle-1-width/2))}
+    a_dict = {'diff': abs(middle-width/2), 'text':'horizontalCenter:parent.horizontalCenter\nhorizontalCenterOffset:' + str(round(middle-width/2))}
     position.append(a_dict)
 
     a_dict = {'diff': abs(right - width), 'text':'right:parent.right\nrightMargin:'+str(round(width-right))}
@@ -168,3 +187,56 @@ def getHorizontalAnchor(left, middle, right):
     sortedPos = sorted(position, key=lambda k: k['diff'])
 
     return sortedPos[0]['text']
+
+#get horizontal anchor when not auto
+def getPositionInfoH(visibleWidget):                                                                                                                                                                                                                                                                                                                            
+    ancName = visibleWidget['hAnchorItem']
+    if(ancName != "lockscreen"):
+        anchorWidget = next(item for item in visibleWidgets if item['name']==ancName)
+
+    widgetDict= {'top': visibleWidget['y'],'verticalCenter':(visibleWidget['y'] + visibleWidget['h']/2), 'bottom':  (visibleWidget['y'] + visibleWidget['h'])}
+    anchorDict =[ ] 
+    if(visibleWidget['hAnchorItem'] == "lockscreen"):
+        anchorDict= {'top': 0,'verticalCenter':height/2, 'bottom':  height}
+    else:                                                                                                                                                                                                                                                                                                                                                                    
+        anchorDict= {'top': anchorWidget['y'],'verticalCenter':(anchorWidget['y'] + anchorWidget['h']/2), 'bottom':  (anchorWidget['y'] + anchorWidget['h'])}
+
+    body = "\nanchors{\n" + visibleWidget['hAnchor'] + ":"
+    if(visibleWidget['hAnchorItem'] == "lockscreen"):
+        body = body + "parent." + visibleWidget['hAnchorTo'] 
+    else:                                                                                                                                                                                                                                                                                                                                                                                            
+        body = body + anchorWidget['main'].lower() + "." + visibleWidget['hAnchorTo']  
+
+    if (visibleWidget['hAnchor'] == "verticalCenter"):                                                                                                                                                                                                                                                                                                                                                                                                
+        body = body + "\nverticalCenterOffset: "+str(widgetDict[visibleWidget['hAnchor'] ] - anchorDict[visibleWidget['hAnchorTo'] ]) 
+    elif (visibleWidget['hAnchor'] == "top"):                                                                                                                                                                                                                                                                                                                                                                                                
+        body = body + "\n" +visibleWidget['hAnchor'] +"Margin: "+str(widgetDict[visibleWidget['hAnchor'] ] - anchorDict[visibleWidget['hAnchorTo'] ])  
+    else:                                                                                                                                                                                                                                                                                                                                                                                                        
+        body = body + "\n" +visibleWidget['hAnchor'] +"Margin: "+str(-widgetDict[visibleWidget['hAnchor'] ] + anchorDict[visibleWidget['hAnchorTo'] ])  
+    return body
+
+#get vertical anchor when not auto
+def getPositionInfoV(visibleWidget):                                                                                                                                                                                                                                                                                                                            
+    ancName = visibleWidget['vAnchorItem']
+    if(ancName != "lockscreen"):
+        anchorWidget = next(item for item in visibleWidgets if item["name"]==visibleWidget['vAnchorItem'])
+    widgetDict= {'left': visibleWidget['x'],'horizontalCenter':(visibleWidget['x'] + visibleWidget['w']/2), 'right':  (visibleWidget['x'] + visibleWidget['w'])}
+    anchorDict = [ ] 
+    if(visibleWidget['vAnchorItem'] == "lockscreen"):
+        anchorDict= {'left': 0,'horizontalCenter':width/2, 'right':  width}
+    else:                                                                                                                                                                                                                                                                                                                                                                    
+        anchorDict= {'left': anchorWidget['x'],'horizontalCenter':(anchorWidget['x'] + anchorWidget['w']/2), 'right':  (anchorWidget['x'] + anchorWidget['w'])}
+
+    body =  visibleWidget['vAnchor'] + ":"
+    if(visibleWidget['vAnchorItem'] == "lockscreen"):
+        body = body + "parent." + visibleWidget['vAnchorTo'] 
+    else:                                                                                                                                                                                                                                                                                                                                                                                            
+        body = body + anchorWidget['main'].lower() + "." + visibleWidget['vAnchorTo']  
+
+    if (visibleWidget['vAnchor'] == "horizontalCenter"):                                                                                                                                                                                                                                                                                                                                                                                                
+        body = body + "\nhorizontalCenterOffset: "+str(widgetDict[visibleWidget['vAnchor'] ] - anchorDict[visibleWidget['vAnchorTo'] ] )
+    elif (visibleWidget['vAnchor'] == "left"):                                                                                                                                                                                                                                                                                                                                                                                                        
+        body = body + "\n" +visibleWidget['vAnchor'] +"Margin: "+str(widgetDict[visibleWidget['vAnchor'] ] - anchorDict[visibleWidget['vAnchorTo'] ]) 
+    else:                                                                                                                                                                                                                                                                                                                                                                                                        
+        body = body + "\n" +visibleWidget['vAnchor'] +"Margin: "+str(-widgetDict[visibleWidget['vAnchor'] ] + anchorDict[visibleWidget['vAnchorTo'] ])  
+    return body
