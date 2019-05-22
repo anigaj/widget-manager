@@ -46,16 +46,25 @@ isPortrait = 0
 width = 0
 
 #Function that populate list of widgets from json files and appends isVisible
-def getWidgets():
-
+def getWidgets(isPort):
     path_to_json = '/usr/share/widgetManager/widgets/'
     json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
 
     widgets.clear()
-    a_dict = {'isVisible':0} 
+    if(isPort): 
+        jsFile = open("/home/nemo/widgetManager/PortraitWidgetsPos.json")
+    else:                        
+        jsFile = open("/home/nemo/widgetManager/LandscapeWidgetsPos.json")
+    currentWidgets = json.load(jsFile) 
+    defaultData = {'x': 0 , 'y': 0, 'h': 0, 'w':0, 'hAnchor':'auto', 'hAnchorTo': 'top', 'hAnchorItem': 'lockscren', 'vAnchor': 'auto', 'vAnchorTo': 'right', 'vAnchorItem': 'lockscreen', 'isVisible':0 } 
     for js in json_files:
         with open(os.path.join(path_to_json, js)) as json_file:
             data = json.load(json_file)
+            if not any(d['name'] == data['name'] for d in currentWidgets):
+                a_dict = defaultData
+            else:                                                                            
+                a_dict = next(item for item in currentWidgets if item["name"]==data['name'])
+
             data.update(a_dict) 
             widgets.append(data)
 
@@ -81,20 +90,33 @@ def initWidgets(sWidth, sHeight, isPort):
 
 #Called when there is an error, reverts back to the back up files
 def cancelLayout():
-    shutil.copyfile("widgetManager/PortraitWidgets.qml.old","widgetManager/PortraitWidgets.qml")
-    shutil.copyfile("widgetManager/LandscapeWidgets.qml.old","widgetManager/LandscapeWidgets.qml")
+    shutil.copyfile("/home/nemo/widgetManager/PortraitWidgets.qml.old","/home/nemo/widgetManager/PortraitWidgets.qml")
+    shutil.copyfile("/home/nemo/widgetManager/LandscapeWidgets.qml.old","/home/nemo/widgetManager/LandscapeWidgets.qml")
+
+    shutil.copyfile("/home/nemo/widgetManager/PortraitWidgetsPos.json.old","/home/nemo/widgetManager/PortraitWidgetsPos.json")
+    shutil.copyfile("/home/nemo/widgetManager/LandscapeWidgetsPos.json.old","/home/nemo/widgetManager/LandscapeWidgetsPos.json")
 
 #Back up last good configuration
 def backupLayout():
-    shutil.copyfile("widgetManager/PortraitWidgets.qml","widgetManager/PortraitWidgets.qml.old")
-    shutil.copyfile("widgetManager/LandscapeWidgets.qml","widgetManager/LandscapeWidgets.qml.old")
+    shutil.copyfile("/home/nemo/widgetManager/PortraitWidgets.qml","/home/nemo/widgetManager/PortraitWidgets.qml.old")
+    shutil.copyfile("/home/nemo/widgetManager/LandscapeWidgets.qml","/home/nemo/widgetManager/LandscapeWidgets.qml.old")
+
+    shutil.copyfile("/home/nemo/widgetManager/PortraitWidgetsPos.json","/home/nemo/widgetManager/PortraitWidgetsPos.json.old")
+    shutil.copyfile("/home/nemo/widgetManager/LandscapeWidgetsPos.json","/home/nemo/widgetManager/LandscapeWidgetsPos.json.old")
+
 #Create the new qml file using x y positions
 def createQMLxy():
     if(isPortrait):
-        file = open("widgetManager/PortraitWidgets.qml","w")
+        file = open("/home/nemo/widgetManager/PortraitWidgets.qml","w")
+        jsFile = open("/home/nemo/widgetManager/PortraitWidgetsPos.json","w")
     else:
-        file = open("widgetManager/LandscapeWidgets.qml","w")
+        file = open("/home/nemo/widgetManager/LandscapeWidgets.qml","w")
+        jsFile = open("/home/nemo/widgetManager/LandscapeWidgetsPos.json","w")
 
+#write the widget positions to json
+    json.dump(visibleWidgets, jsFile)
+
+# now write qml file
     header = "import QtQuick 2.0\nimport Sailfish.Silica 1.0\n"
     body = "Item{\nanchors.fill: parent\n"
     #Loop over widgets
@@ -110,9 +132,16 @@ def createQMLxy():
 #Create the new qml file using anchors
 def createQML():
     if(isPortrait):
-        file = open("widgetManager/PortraitWidgets.qml","w")
+        file = open("/home/nemo/widgetManager/PortraitWidgets.qml","w")
+        jsFile = open("/home/nemo/widgetManager/PortraitWidgetsPos.json","w")
     else:
-        file = open("widgetManager/LandscapeWidgets.qml","w")
+        file = open("/home/nemo/widgetManager/LandscapeWidgets.qml","w")
+        jsFile = open("/home/nemo/widgetManager/LandscapeWidgetsPos.json","w")
+
+#write the widget positions to json
+    json.dump(visibleWidgets, jsFile)
+
+# now write qml file
 
     # sort based on distance to center of widget from top right
     visibleWidgetsx = sorted(visibleWidgets, key=lambda k: k['xy'])
@@ -167,7 +196,7 @@ def appendWidget(vwx,vwy, visibleWidget):
 
     # Calculate hypotenuse squared (distance from top right)
     xy = (width - (vwx + wPixels/2))*(width - (vwx + wPixels/2)) + (vwy+hPixels/2)*(vwy+hPixels/2) 
-    a_dict = {'x': vwx , 'y': vwy, 'h': hPixels, 'w':wPixels, 'xy': xy, 'hAnchor': visibleWidget.hAnchor, 'hAnchorTo': visibleWidget.hAnchorTo, 'hAnchorItem': visibleWidget.hAnchorItem, 'vAnchor': visibleWidget.vAnchor, 'vAnchorTo': visibleWidget.vAnchorTo, 'vAnchorItem': visibleWidget.vAnchorItem }
+    a_dict = {'x': vwx , 'y': vwy, 'h': hPixels, 'w':wPixels, 'xy': xy, 'hAnchor': visibleWidget.hAnchor, 'hAnchorTo': visibleWidget.hAnchorTo, 'hAnchorItem': visibleWidget.hAnchorItem, 'vAnchor': visibleWidget.vAnchor, 'vAnchorTo': visibleWidget.vAnchorTo, 'vAnchorItem': visibleWidget.vAnchorItem, 'isVisible':1 }
     data.update(a_dict) 
     visibleWidgets.append(data)
 

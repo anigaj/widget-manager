@@ -8,6 +8,10 @@ ApplicationWindow
 {
     id: app
     property ListModel allWidgets: ListModel {}
+    property ListModel itemModel: ListModel {}
+    property ListModel posModel: ListModel {}
+    
+    
     initialPage: Component 
     { 
         FirstPage { } 

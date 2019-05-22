@@ -1,12 +1,12 @@
 
-import QtQuick 2.0
+import QtQuick 2.2
 import Sailfish.Silica 1.0
 import io.thp.pyotherside 1.4
 import org.nemomobile.configuration 1.0
 
 Page 
 {
-    id: page
+    id: fpage
     allowedOrientations: Orientation.All
     ConfigurationGroup
     {
@@ -16,7 +16,7 @@ Page
     }
     SilicaFlickable
     {
-        anchors.fill: parent 
+        anchors.fill: parent
         SilicaListView
         {
             id: listView
@@ -29,15 +29,10 @@ Page
         } 
 
         Component.onCompleted: {
-            python.call('widgets.getWidgets',[],function(widgets) {
-                var result_length = widgets.length;
-                app.allWidgets.clear();
-                for (var i=0; i<result_length; ++i) {
-                    app.allWidgets.append(widgets[i]);
-                }
-            });
+             orientChange.start()
         }
 
+        
         PullDownMenu
         {
             MenuItem
@@ -72,4 +67,23 @@ Page
         if(status === PageStatus.Active) pageStack.pushAttached(Qt.resolvedUrl("ArrangeWidgets.qml")) 
     }
     
+    Timer
+     {
+        id: orientChange
+        repeat: false
+        interval: 50
+
+        onTriggered:{ 
+            python.call('widgets.getWidgets',[fpage.isPortrait],function(widgets) {
+                var result_length = widgets.length;
+                app.allWidgets.clear();
+                for (var i=0; i<result_length; ++i) {
+                    app.allWidgets.append(widgets[i]);
+                }            
+            });
+            if(status === PageStatus.Active) pageStack.pushAttached(Qt.resolvedUrl("ArrangeWidgets.qml")) 
+        }
+    } 
+    
+    onOrientationChanged: orientChange.start()   
 }

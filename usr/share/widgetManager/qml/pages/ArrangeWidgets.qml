@@ -4,7 +4,7 @@ import org.nemomobile.configuration 1.0
 
 Page 
 {
-    id: page
+    id: awPage
     allowedOrientations: Orientation.All
     ConfigurationGroup
     {
@@ -42,16 +42,6 @@ Page
         key: "/desktop/lipstick-jolla-home/widgetManager/arrangeCount"
     }
     
-    ListModel
-    {
-        id: itemModel
-    }
-
-     ListModel
-    {
-        id: posModel
-    }
-    
     Column
     {
         spacing: widgetSettings.gridSpace
@@ -59,11 +49,11 @@ Page
         id: horLines
         Repeater
         {
-            model: Math.ceil((page.height-saveButton.height)/(horLines.spacing+1))
+            model: Math.ceil((awPage.height-saveButton.height)/(horLines.spacing+1))
 
             Rectangle
             {
-                width: page.width
+                width: awPage.width
                 height:1
                 color: "yellow"
                 opacity: 0.5
@@ -78,11 +68,11 @@ Page
         id: verLines
         Repeater
         {  
-            model:Math.ceil( (page.width)/(verLines.spacing+1))
+            model:Math.ceil( (awPage.width)/(verLines.spacing+1))
             Rectangle
             {
                 width: 1
-                height:page.height-saveButton.height
+                height:awPage.height-saveButton.height
                 color: "yellow"
                 opacity:0.5
             }
@@ -90,7 +80,7 @@ Page
     }
     Rectangle
     {
-        width: page.width
+        width: awPage.width
         height:1
         color: "red"
         opacity: 1.0
@@ -100,7 +90,7 @@ Page
     Rectangle
     {
         width: 1
-        height:page.height-saveButton.height
+        height:awPage.height-saveButton.height
         color: "red"
         opacity: 1.0
         visible: widgetSettings.showGrid
@@ -110,11 +100,11 @@ Page
     FineControlBox
     {
         id: fcBox
-        isPortrait:page.isPortrait 
+        isPortrait:awPage.isPortrait 
         z: 100
         isVisible: false
         isHorizontal: true
-        visW: itemModel
+        visW: app.itemModel
     }
     
     SilicaListView
@@ -123,132 +113,27 @@ Page
         id: recList
         width: parent.width 
         height: parent.height - saveButton.height 
-        model: itemModel
+        model: app.itemModel
         property int yPos: 0
         cacheBuffer: 100
-        delegate: Component
-        {
-            id:widgetDelegate
-            
-            Rectangle
-            {
-                id: rect
-                height: content.height
-                width: content.width
-                
-                x: (page.isPortrait? Screen.width: Screen.height)-content.width
-                 
-                color: "transparent"
-                border.color: Theme.primaryColor
-                
-                Component.onCompleted: {
-                    var item = itemModel.get(model.index)
-                    var itemPos =posModel.get(model.index) 
-                    item.width = Math.round(content.width)
-                    item.height = Math.round(content.height)
-                    itemPos.x =Math.round( x)
-                    itemPos.y =Math.round(recList.yPos)
-                    recList.yPos = recList.yPos + Math.round(content.height)
-                }                         
-                
-                Loader
-                {
-                    id: content
-                    property bool useanchors: widgetSettings.useAnchors 
-                    source: model.path + "/" + model.preview+ ".qml"
-                    onLoaded:{    
-                        if(counter.active && model.index ==itemModel.count-1){
-                            touchInteractionHint.x = rect.x + rect.width/2 -touchInteractionHint.width/2
-                            touchInteractionHint.y = recList.yPos+ rect.height/2 -touchInteractionHint.height/2
-                            touchInteractionHint.start()
-                             counter.increase()
-                        }
-                    }
-                }              
 
-                MouseArea
-                {
-                    anchors.fill: parent
-                    drag.target: rect
-                    onReleased: {
-                        var item = posModel.get(model.index)
-                        rect.x = Math.round(rect.x)              
-                        item.x = rect.x 
-                        rect.y = Math.round(rect.y)
-                        item.y = rect.y
-                    }
-                    onPressAndHold:{
-                        fcBox.isVisible = true
-                        var item = itemModel.get(model.index)
-                        var itemPos = posModel.get(model.index)
-                         fcBox.initialise (item,itemPos,rect)
-                    }
-                }
-                
-                Rectangle 
-                {
-                    width: 1
-                    height: 20
-                    color: "red"
-                    opacity: 1.0
-                    anchors
-                    {
-                        top: parent.top
-                        horizontalCenter: parent.horizontalCenter 
-                    }
-                }
-                Rectangle
-                {
-                    width: 20
-                    height: 1
-                    color: "red"
-                    opacity: 1.0
-                    anchors
-                    {
-                        left: parent.left
-                        verticalCenter: parent.verticalCenter 
-                    }
-                }
-                Rectangle 
-                {
-                    width: 1
-                    height: 20
-                    color: "red"
-                    opacity: 1.0
-                    anchors
-                    {
-                        bottom: parent.bottom
-                        horizontalCenter: parent.horizontalCenter
-                    }
-                }
-                Rectangle
-                {
-                    width: 20
-                    height: 1
-                    color: "red"
-                    opacity: 1.0
-                    anchors
-                    {
-                        right: parent.right
-                        verticalCenter: parent.verticalCenter 
-                    }
-                }
-            }
+        delegate: WidgetView
+        {
         }
     }
     Button 
     {
         id: saveButton
-        text:{ "Save " + (page.isPortrait ? "portrait " : "landscape ") + "layout"   }
+        text:{ "Save " + (awPage.isPortrait ? "portrait " : "landscape ") + "layout"   }
         anchors.bottom: parent.bottom
         width: parent.width
 
         onClicked:{
-            python.call('widgets.initWidgets',[Screen.width, Screen.height, page.isPortrait],function() {})
+            python.call('widgets.initWidgets',[Screen.width, Screen.height, awPage.isPortrait],function() {})
             for( var i = 0; i < itemModel.count; ++i)
             {
-                var widget = itemModel.get(i)
-                var widgetPos = posModel.get(i)
+                var widget = app.itemModel.get(i)
+                var widgetPos = app.posModel.get(i)
                  console.log(widget.name +" " +widgetPos.x + " " + widgetPos.y)  
                 python.call('widgets.appendWidget',[widgetPos.x,widgetPos.y,widget],function() {})
             }
@@ -259,18 +144,36 @@ Page
     onStatusChanged: {
         if(status === PageStatus.Active) createRectangles() 
     }
+    
+    onOrientationChanged: if(status === PageStatus.Active) pageStack.popAttached()
     function createRectangles()
     {
-        itemModel.clear()
-        posModel.clear()
         for( var i = 0; i < app.allWidgets.count; ++i)
         {
-            var widget = app.allWidgets.get(i) 
-            if(widget.isVisible)
+            var widget = app.allWidgets.get(i)
+            // find widget in list model
+            var widgetFound = false
+            var j
+            for(j=0;  j  < app.itemModel.count; ++j) 
             {
-               itemModel.append({name:widget.name, path:widget.path,preview:widget.preview,  height:0.0,width:0.0,hAnchor:"auto", hAnchorTo:"top", hAnchorItem:"lockscreen",  vAnchor:"auto", vAnchorTo:"right", vAnchorItem:"lockscreen"})
+                var visWidget = app.itemModel.get(j) 
+                if(widget.name == visWidget.name)
+                {
+                    widgetFound = true
+                    break
+                }
+            }
+                 
+            if(widget.isVisible && !widgetFound)
+            {
+               app.itemModel.append({name:widget.name, path:widget.path,preview:widget.preview,  height:widget.h,width:widget.w,hAnchor:widget.hAnchor, hAnchorTo:widget.hAnchorTo, hAnchorItem:widget.hAnchorItem,  vAnchor:widget.vAnchor, vAnchorTo:widget.vAnchorTo, vAnchorItem:widget.vAnchorItem})
 
-                posModel.append({x:0.0, y:0.0})
+               app.posModel.append({x:widget.x, y:widget.y})
+            }
+            else if(!widget.isVisible && widgetFound)
+            {
+                app.itemModel.remove(j)
+                app.posModel.remove(j)
             }
         }  
     }

@@ -27,6 +27,8 @@ Item
         targetIt = targetItem
         targetItPos = targetItemPos
         targetRt = targetRect
+        targetItPos.x = targetRt.x
+        targetItPos.y = targetRt.y
     }
     onIsVisibleChanged:{
         if(isVisible && custAnchors.expanded && widgetSettings.useAnchors&&counter.active  ){
